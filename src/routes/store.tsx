@@ -1,6 +1,10 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
-import { products, categories, top5, useCart, useCurrent, useUsers, isAdminIn, type Product } from "@/lib/shop";
+import { products, categories, top5, useCart, isAdminIn, dzd, type Product } from "@/lib/shop";
+import { supabase } from "@/integrations/supabase/client";
+import { HelpFab } from "@/components/HelpFab";
+
+type Profile = { full_name: string; phone: string; wilaya: string; address: string };
 import { AuthModal } from "@/components/AuthModal";
 
 export const Route = createFileRoute("/store")({
@@ -21,8 +25,9 @@ const Stars = ({ r }: { r: number }) => <span className="text-gold">{"★".repea
 
 function Store() {
   const nav = useNavigate();
-  const [current, setCurrent] = useCurrent();
-  const [users] = useUsers();
+  const [user, setUser] = useState<{ email: string } | null>(null);
+  const [profile, setProfile] = useState<Profile | null>(null);
+  const [authChecked, setAuthChecked] = useState(false);
   const [cart, setCart] = useCart();
   const [q, setQ] = useState("");
   const [cat, setCat] = useState("الكل");
@@ -33,13 +38,21 @@ function Store() {
   const [ready, setReady] = useState(false);
 
   useEffect(() => { if (!isAdminIn()) nav({ to: "/" }); else setReady(true); }, [nav]);
-  const user = users.find((x) => x.email === current);
+  useEffect(() => {
+    const load = async (u: { id: string; email?: string } | null) => {
+      setUser(u ? { email: u.email ?? "" } : null); setAuthChecked(true);
+      if (u) { const { data } = await supabase.from("profiles").select("full_name, phone, wilaya, address").eq("id", u.id).maybeSingle(); setProfile(data); } else setProfile(null);
+    };
+    supabase.auth.getUser().then(({ data }) => load(data.user));
+    const { data: sub } = supabase.auth.onAuthStateChange((_e, s) => { setTimeout(() => load(s?.user ?? null), 0); });
+    return () => sub.subscription.unsubscribe();
+  }, []);
   const filtered = useMemo(() => products.filter((p) => (cat === "الكل" || p.category === cat) && p.name.includes(q.trim())), [q, cat]);
   const count = Object.values(cart).reduce((a, b) => a + b, 0);
   const total = Object.entries(cart).reduce((s, [id, n]) => s + (products.find((p) => p.id === +id)?.price ?? 0) * n, 0);
   const add = (p: Product) => { setCart({ ...cart, [p.id]: (cart[p.id] ?? 0) + 1 }); setToast(`أضيف "${p.name}" إلى السلة`); setTimeout(() => setToast(""), 1800); };
   const change = (id: number, d: number) => { const n = { ...cart, [id]: (cart[id] ?? 0) + d }; if ((n[id] ?? 0) <= 0) delete n[id]; setCart(n); };
-  if (!ready) return null;
+  if (!ready || !authChecked) return null;
 
   const Card = ({ p }: { p: Product }) => (
     <div className="group overflow-hidden rounded-2xl bg-card shadow-card">
@@ -54,7 +67,7 @@ function Store() {
         <p className="mt-1 line-clamp-1 text-sm text-muted-foreground">{p.desc}</p>
         <div className="mt-2 text-sm"><Stars r={p.rating} /></div>
         <div className="mt-3 flex items-center justify-between">
-          <div><span className="text-lg font-bold text-primary">{p.price} ر.س</span>{p.oldPrice && <span className="mr-2 text-sm text-muted-foreground line-through">{p.oldPrice}</span>}</div>
+          <div><span className="text-lg font-bold text-primary">{dzd(p.price)}</span>{p.oldPrice && <span className="mr-2 text-sm text-muted-foreground line-through">{p.oldPrice}</span>}</div>
           <button onClick={() => add(p)} className="rounded-lg bg-primary px-3 py-2 text-sm font-bold text-primary-foreground hover:opacity-90">+ للسلة</button>
         </div>
       </div>
@@ -81,7 +94,7 @@ function Store() {
           <section className="bg-hero overflow-hidden rounded-3xl p-8 text-primary-foreground md:p-14">
             <p className="font-bold text-gold">عروض الموسم</p>
             <h2 className="mt-2 max-w-xl text-4xl leading-tight md:text-5xl">خصومات تصل إلى 30% على أفضل المنتجات</h2>
-            <p className="mt-3 max-w-md opacity-80">شحن مجاني للطلبات فوق 200 ر.س وإرجاع سهل خلال 14 يومًا.</p>
+            <p className="mt-3 max-w-md opacity-80">شحن مجاني للطلبات فوق 5000 د.ج وإرجاع سهل خلال 14 يومًا.</p>
             <a href="#offers" className="mt-6 inline-block rounded-full bg-accent px-6 py-3 font-bold text-accent-foreground">تسوّق العروض</a>
           </section>
 
@@ -105,7 +118,7 @@ function Store() {
                   <p className="text-sm text-muted-foreground">{p.sales.toLocaleString("ar")} عملية بيع</p>
                   <div className="text-sm"><Stars r={p.rating} /></div>
                   <div className="mt-2 flex items-center justify-between">
-                    <span className="font-bold text-primary">{p.price} ر.س</span>
+                    <span className="font-bold text-primary">{dzd(p.price)}</span>
                     <button onClick={() => add(p)} className="rounded-lg bg-accent px-2 py-1 text-xs font-bold text-accent-foreground">أضف</button>
                   </div>
                 </div>
@@ -136,6 +149,7 @@ function Store() {
       </div>
 
       {!user && <AuthModal />}
+      <HelpFab />
 
       {cartOpen && (
         <div className="fixed inset-0 z-40 bg-overlay" onClick={() => setCartOpen(false)}>
@@ -146,12 +160,12 @@ function Store() {
               {Object.entries(cart).map(([id, n]) => { const p = products.find((x) => x.id === +id)!; return (
                 <div key={id} className="flex items-center gap-3 rounded-xl border p-2">
                   <img src={p.image} alt="" className="h-14 w-14 rounded-lg object-cover" />
-                  <div className="flex-1"><p className="text-sm font-bold">{p.name}</p><p className="text-sm text-primary">{p.price * n} ر.س</p></div>
+                  <div className="flex-1"><p className="text-sm font-bold">{p.name}</p><p className="text-sm text-primary">{dzd(p.price * n)}</p></div>
                   <div className="flex items-center gap-2"><button onClick={() => change(p.id, -1)} className="h-7 w-7 rounded bg-muted">−</button>{n}<button onClick={() => change(p.id, 1)} className="h-7 w-7 rounded bg-muted">+</button></div>
                 </div>); })}
             </div>
             <div className="border-t pt-4">
-              <div className="mb-3 flex justify-between font-bold"><span>الإجمالي</span><span>{total} ر.س</span></div>
+              <div className="mb-3 flex justify-between font-bold"><span>الإجمالي</span><span>{dzd(total)}</span></div>
               <button disabled={!count} onClick={() => { setCart({}); setCartOpen(false); setToast("تم إتمام الطلب بنجاح 🎉"); setTimeout(() => setToast(""), 2500); }} className="w-full rounded-lg bg-accent py-3 font-bold text-accent-foreground disabled:opacity-50">إتمام الشراء</button>
             </div>
           </aside>
@@ -162,11 +176,14 @@ function Store() {
         <div className="fixed inset-0 z-40 grid place-items-center bg-overlay p-4" onClick={() => setAcctOpen(false)}>
           <div onClick={(e) => e.stopPropagation()} className="w-full max-w-sm rounded-2xl bg-card p-6 text-center shadow-card">
             <div className="mx-auto grid h-16 w-16 place-items-center rounded-full bg-secondary text-3xl">👤</div>
-            <h2 className="mt-3 text-xl">{user.name}</h2>
+            <h2 className="mt-3 text-xl">{profile?.full_name || "مستخدم"}</h2>
             <p className="text-sm text-muted-foreground">{user.email} · ✅ بريد مؤكَّد</p>
+            <div className="mt-3 space-y-1 rounded-xl bg-muted p-3 text-right text-sm">
+              <p>📞 {profile?.phone || "—"}</p><p>📍 {profile?.wilaya || "—"}</p><p>🏠 {profile?.address || "—"}</p>
+            </div>
             <p className="mt-3 text-sm">عناصر في السلة: {count}</p>
-            <button onClick={() => { setCurrent(null); setAcctOpen(false); }} className="mt-5 w-full rounded-lg border py-2 font-bold">تسجيل الخروج</button>
-            <button onClick={() => { sessionStorage.removeItem("admin"); setCurrent(null); nav({ to: "/" }); }} className="mt-2 w-full text-sm text-muted-foreground">خروج المسؤول</button>
+            <button onClick={async () => { await supabase.auth.signOut(); setAcctOpen(false); }} className="mt-5 w-full rounded-lg border py-2 font-bold">تسجيل الخروج</button>
+            <button onClick={async () => { sessionStorage.removeItem("admin"); await supabase.auth.signOut(); nav({ to: "/" }); }} className="mt-2 w-full text-sm text-muted-foreground">خروج المسؤول</button>
           </div>
         </div>
       )}
@@ -180,14 +197,14 @@ function Store() {
               <h2 className="mt-1 text-2xl">{detail.name}</h2>
               <Stars r={detail.rating} /><p className="text-sm text-muted-foreground">{detail.sales} عملية بيع</p>
               <p className="mt-3">{detail.desc}</p>
-              <p className="mt-4 text-2xl font-bold text-primary">{detail.price} ر.س</p>
+              <p className="mt-4 text-2xl font-bold text-primary">{dzd(detail.price)}</p>
               <button onClick={() => { add(detail); setDetail(null); }} className="mt-4 w-full rounded-lg bg-primary py-3 font-bold text-primary-foreground">أضف إلى السلة</button>
             </div>
           </div>
         </div>
       )}
 
-      {toast && <div className="fixed bottom-6 left-1/2 z-50 -translate-x-1/2 rounded-full bg-foreground px-5 py-3 text-sm text-background shadow-card">{toast}</div>}
+      {toast && <div className="fixed bottom-24 left-1/2 z-50 -translate-x-1/2 rounded-full bg-foreground px-5 py-3 text-sm text-background shadow-card">{toast}</div>}
     </>
   );
 }

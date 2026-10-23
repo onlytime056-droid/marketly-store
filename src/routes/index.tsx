@@ -1,5 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
+import { HelpFab } from "@/components/HelpFab";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -40,6 +41,7 @@ function Login() {
         <button className="w-full rounded-lg bg-primary py-2.5 font-bold text-primary-foreground hover:opacity-90">دخول</button>
         <p className="mt-4 text-center text-xs text-muted-foreground">للتجربة: admin / 123456</p>
       </form>
+      <HelpFab />
     </div>
   );
 }
