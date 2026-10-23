@@ -38,7 +38,7 @@ function Store() {
   const count = Object.values(cart).reduce((a, b) => a + b, 0);
   const total = Object.entries(cart).reduce((s, [id, n]) => s + (products.find((p) => p.id === +id)?.price ?? 0) * n, 0);
   const add = (p: Product) => { setCart({ ...cart, [p.id]: (cart[p.id] ?? 0) + 1 }); setToast(`أضيف "${p.name}" إلى السلة`); setTimeout(() => setToast(""), 1800); };
-  const change = (id: number, d: number) => { const n = { ...cart, [id]: (cart[id] ?? 0) + d }; if (n[id] <= 0) delete n[id]; setCart(n); };
+  const change = (id: number, d: number) => { const n = { ...cart, [id]: (cart[id] ?? 0) + d }; if ((n[id] ?? 0) <= 0) delete n[id]; setCart(n); };
   if (!ready) return null;
 
   const Card = ({ p }: { p: Product }) => (
