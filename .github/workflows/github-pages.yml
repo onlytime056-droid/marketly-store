@@ -1,0 +1,41 @@
+name: Deploy to GitHub Pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+      - run: bun install
+      - run: bun run build
+        env:
+          GITHUB_PAGES: "1"
+          VITE_SUPABASE_URL: https://gzljvdtbqoqngukotufx.supabase.co
+          VITE_SUPABASE_PUBLISHABLE_KEY: sb_publishable_HZcFdHr81yInLVbWQlvYqw_FbLlUhoG
+          VITE_SUPABASE_PROJECT_ID: gzljvdtbqoqngukotufx
+      - name: Prepare static site
+        run: |
+          OUT=dist/client
+          test -f "$OUT/index.html"
+          echo '<!doctype html><meta charset="utf-8"><script>location.replace("/")</script>' > "$OUT/404.html"
+          echo "raidsaker.online" > "$OUT/CNAME"
+          touch "$OUT/.nojekyll"
+          echo "OUT=$OUT" >> $GITHUB_ENV
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: ${{ env.OUT }}
+      - id: deployment
+        uses: actions/deploy-pages@v4
