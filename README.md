@@ -1,14 +1,34 @@
-# Welcome to your Lovable project
+# Marketly Store
+
+أريد منك إنشاء موقع متجر إلكتروني عصري واحترافي، وفق الخطوات التالية:
+
+عند فتح الموقع، تظهر صفحة تسجيل دخول تحتوي على اسم المستخدم admin وكلمة المرور 123456.
+
+بعد إدخال بيانات الدخول الصحيحة، ينتقل المستخدم إلى الصفحة الرئيسية للمتجر.
+
+عند الدخول إلى المتجر، تظهر نافذة منبثقة في منتصف الشاشة تطلب من المستخدم تسجيل الدخول أو إنشاء حساب جديد. تكون خلفية الصفحة الرئيسية ضبابية (Blur) حتى لا يتمكن المستخدم من تصفح المتجر قبل تسجيل الدخول.
+
+عند إنشاء حساب جديد، يُطلب من المستخدم إدخال بياناته، بما فيها البريد الإلكتروني وكلمة المرور، ثم إرسال رسالة تأكيد إلى بريده الإلكتروني. بعد تأكيد البريد الإلكتروني وتسجيل الدخول، تختفي النافذة المنبثقة والضبابية، وتظهر الصفحة الرئيسية للمتجر بشكل طبيعي.
+
+صمّم الصفحة الرئيسية على شكل متجر إلكتروني احترافي، يحتوي على شريط بحث، وأقسام للمنتجات، وصور المنتجات، وأسعارها، وتفاصيلها، مع أزرار لإضافة المنتجات إلى سلة التسوق.
+
+أضف قسمًا مميزًا بعنوان "أفضل 5 منتجات مبيعًا" يعرض المنتجات الخمسة الأكثر مبيعًا، مع ترتيبها وإظهار عدد المبيعات والسعر والتقييم إن أمكن.
+
+أضف بقية العناصر المعتادة في المتاجر الإلكترونية العالمية، مثل المنتجات الجديدة، والعروض، والتصنيفات، وسلة التسوق، وحساب المستخدم، مع تصميم عصري ومتجاوب مع مختلف أحجام الشاشات.
+
+أريد تنفيذ المشروع بأبسط طريقة مناسبة لمشروع جامعي، مع التركيز على التصميم الجميل وتنفيذ الخطوات المذكورة. يمكنك اختيار التصميم والتقنيات وطريقة التنفيذ التي تراها مناسبة، ولا حاجة إلى تعقيد المشروع بميزات إضافية غير ضرورية.
+
+اجعل الموقع قابلًا للتجربة، بحيث تعمل الأزرار والنماذج والتنقل بين الصفحات بصورة صحيحة، واستخدم بيانات تجريبية للمنتجات والمبيعات عند الحاجة. إذا كانت هناك حاجة إلى إعداد خدمة خارجية لتأكيد البريد الإلكتروني، فوضّح ذلك واستخدم أبسط حل مناسب للمشروع.
 
 This project was built with [Lovable](https://lovable.dev).
 
 ## Build with Lovable
 
-Open your project in the [Lovable editor](https://lovable.dev) and keep building.
+Continue developing this project in the [Lovable editor](https://lovable.dev/projects/804e97c5-628b-42d6-80ad-f3b6d2d52047).
 
 - **Ship faster**: describe what you want to build and Lovable handles the code.
-- **Stay in sync**: connect the project to GitHub and every change made in Lovable is committed straight to your repository.
-- **Full ownership**: this code is yours. Push to your repository and your changes sync back into Lovable, ready for your next prompt.
+- **Stay in sync**: every change made in Lovable is committed straight to this repository.
+- **Full ownership**: this code is yours. Push to `main` on GitHub and your changes sync back into Lovable, ready for your next prompt.
 
 ## Development
 
@@ -20,10 +40,3 @@ cd <repository-name>
 npm i
 npm run dev
 ```
-
-## Built with
-
-- TanStack Start
-- TypeScript
-- React
-- Tailwind CSS
