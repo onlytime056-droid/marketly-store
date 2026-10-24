@@ -15,7 +15,7 @@ export default defineConfig({
     // nitro/vite builds from this
     server: { entry: "server" },
     ...(ghPages
-      ? { prerender: { enabled: true, crawlLinks: false }, pages: [{ path: "/" }, { path: "/store/" }] }
+      ? { prerender: { enabled: true, crawlLinks: false }, pages: [{ path: "/" }] }
       : {}),
   },
 });
