@@ -23,11 +23,14 @@ jobs:
       - run: bun run build
         env:
           GITHUB_PAGES: "1"
+          VITE_SUPABASE_URL: https://gzljvdtbqoqngukotufx.supabase.co
+          VITE_SUPABASE_PUBLISHABLE_KEY: sb_publishable_HZcFdHr81yInLVbWQlvYqw_FbLlUhoG
+          VITE_SUPABASE_PROJECT_ID: gzljvdtbqoqngukotufx
       - name: Prepare static site
         run: |
-          OUT=$(dirname "$(find dist .output -name index.html -path '*client*' | head -1)")
-          echo "Static output: $OUT"
-          cp "$OUT/index.html" "$OUT/404.html"
+          OUT=dist/client
+          test -f "$OUT/index.html"
+          echo '<!doctype html><meta charset="utf-8"><script>location.replace("/")</script>' > "$OUT/404.html"
           echo "raidsaker.online" > "$OUT/CNAME"
           touch "$OUT/.nojekyll"
           echo "OUT=$OUT" >> $GITHUB_ENV
