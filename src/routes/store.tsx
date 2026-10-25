@@ -37,7 +37,8 @@ function Store() {
   const [toast, setToast] = useState("");
   const [ready, setReady] = useState(false);
   const [products, setProducts] = useState<Product[]>([]);
-  const [limit, setLimit] = useState(20);
+const [page, setPage] = useState(1);
+const pageSize = 20; // عدد المنتجات في كل صفحة
 
   useEffect(() => { if (!isAdminIn()) nav({ to: "/" }); else setReady(true); }, [nav]);
   useEffect(() => {
@@ -59,7 +60,13 @@ function Store() {
   const categories = useMemo(() => ["الكل", ...Array.from(new Set(products.map((p) => p.category)))], [products]);
   const top5 = useMemo(() => [...products].sort((a, b) => b.sales - a.sales).slice(0, 5), [products]);
   const filtered = useMemo(() => { const s = q.trim().toLowerCase(); return products.filter((p) => (cat === "الكل" || p.category === cat) && p.name.toLowerCase().includes(s)); }, [q, cat, products]);
-  useEffect(() => setLimit(20), [q, cat]);
+  const totalPages = Math.ceil(filtered.length / pageSize) || 1;
+const pageProducts = useMemo(() => {
+  const start = (page - 1) * pageSize;
+  return filtered.slice(start, start + pageSize);
+}, [filtered, page]);
+
+useEffect(() => setPage(1), [q, cat]);
   const count = Object.values(cart).reduce((a, b) => a + b, 0);
   const total = Object.entries(cart).reduce((s, [id, n]) => s + (products.find((p) => p.id === +id)?.price ?? 0) * n, 0);
   const add = (p: Product) => { setCart({ ...cart, [p.id]: (cart[p.id] ?? 0) + 1 }); setToast(`أضيف "${p.name}" إلى السلة`); setTimeout(() => setToast(""), 1800); };
@@ -145,11 +152,45 @@ function Store() {
           </section>
 
           <section>
-            <h2 className="mb-5 text-2xl">جميع المنتجات {cat !== "الكل" && `— ${cat}`}</h2>
-            {filtered.length ? <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-5">{filtered.slice(0, limit).map((p) => <Card key={p.id} p={p} />)}</div>
-              : <p className="text-muted-foreground">{products.length ? "لا توجد منتجات مطابقة." : "جارٍ تحميل المنتجات..."}</p>}
-            {filtered.length > limit && <button onClick={() => setLimit(limit + 20)} className="mx-auto mt-6 block rounded-full border bg-card px-6 py-2 font-bold">عرض المزيد ({filtered.length - limit})</button>}
-          </section>
+  <div className="mb-5 flex items-center justify-between">
+    <h2 className="text-2xl">جميع المنتجات {cat !== "الكل" && `— ${cat}`}</h2>
+    <span className="text-sm text-muted-foreground">إجمالي المنتجات: {filtered.length}</span>
+  </div>
+
+  {pageProducts.length ? (
+    <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-5">
+      {pageProducts.map((p) => <Card key={p.id} p={p} />)}
+    </div>
+  ) : (
+    <p className="text-muted-foreground">{products.length ? "لا توجد منتجات مطابقة." : "جارٍ تحميل المنتجات..."}</p>
+  )}
+
+  {/* شريط أرقام الصفحات */}
+  {totalPages > 1 && (
+    <div className="mt-8 flex items-center justify-center gap-2">
+      <button
+        onClick={() => { setPage((p) => Math.max(1, p - 1)); window.scrollTo({ top: 400, behavior: "smooth" }); }}
+        disabled={page === 1}
+        className="rounded-lg border px-4 py-2 font-medium disabled:opacity-40"
+      >
+        السابق
+      </button>
+
+      <span className="px-3 py-2 text-sm font-semibold">
+        صفحة {page} من {totalPages}
+      </span>
+
+      <button
+        onClick={() => { setPage((p) => Math.min(totalPages, p + 1)); window.scrollTo({ top: 400, behavior: "smooth" }); }}
+        disabled={page === totalPages}
+        className="rounded-lg border px-4 py-2 font-medium disabled:opacity-40"
+      >
+        التالي
+      </button>
+    </div>
+  )}
+</section>
+
 
           <section><h2 className="mb-5 text-2xl">✨ وصل حديثًا</h2>
             <div className="grid grid-cols-2 gap-4 md:grid-cols-4">{products.filter((p) => p.isNew).map((p) => <Card key={p.id} p={p} />)}</div>
