@@ -1,7 +1,7 @@
 import { useEffect, useState, useCallback } from "react";
 
 export type Product = {
-  id: number; name: string; category: string; price: number; oldPrice?: number;
+  id: number; name: string; category: string; price: number; oldPrice?: number | undefined;
   rating: number; sales: number; image: string; desc: string; isNew?: boolean;
 };
 
