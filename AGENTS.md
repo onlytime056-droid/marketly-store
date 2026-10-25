@@ -8,3 +8,5 @@
 > Commits you push to the connected branch sync back to Lovable and show up in
 > the editor, so keep the branch in a working state.
 <!-- LOVABLE:END -->
+
+- GitHub Pages copy is built by .github/workflows/github-pages.yml with GITHUB_PAGES=1 (static prerender of `/` only, 404.html redirects to `/`); keep all data access client-side so the static build keeps working.
