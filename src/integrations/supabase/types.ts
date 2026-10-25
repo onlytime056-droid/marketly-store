@@ -14,6 +14,63 @@ export type Database = {
   }
   public: {
     Tables: {
+      orders: {
+        Row: {
+          created_at: string | null
+          id: string
+          items: Json
+          status: string
+          total: number
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          items: Json
+          status?: string
+          total: number
+          user_id?: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          items?: Json
+          status?: string
+          total?: number
+          user_id?: string
+        }
+        Relationships: []
+      }
+      products: {
+        Row: {
+          category: string
+          id: number
+          image: string
+          name: string
+          price: number
+          sold: number
+          stock: number
+        }
+        Insert: {
+          category: string
+          id?: number
+          image: string
+          name: string
+          price: number
+          sold?: number
+          stock?: number
+        }
+        Update: {
+          category?: string
+          id?: number
+          image?: string
+          name?: string
+          price?: number
+          sold?: number
+          stock?: number
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           address: string
@@ -49,7 +106,19 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      product_categories: {
+        Args: never
+        Returns: {
+          category: string
+        }[]
+      }
+      purchase_summary: {
+        Args: never
+        Returns: {
+          amount: number
+          purchases: number
+        }[]
+      }
     }
     Enums: {
       [_ in never]: never
