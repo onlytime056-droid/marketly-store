@@ -85,7 +85,7 @@ function Store() {
         <p className="mt-1 line-clamp-1 text-sm text-muted-foreground">{p.desc}</p>
         <div className="mt-2 text-sm"><Stars r={p.rating} /></div>
         <div className="mt-3 flex items-center justify-between">
-          <div><span className="text-lg font-bold text-primary">{dzd(p.price)}</span>{p.oldPrice && <span className="mr-2 text-sm text-muted-foreground line-through">{p.oldPrice}</span>}</div>
+          <div><span className="text-lg font-bold text-primary">{dzd(p.price)}</span>{p.oldPrice && <span className="mr-2 text-sm text-muted-foreground line-through">{dzd(p.oldPrice)}</span>}</div>
           <button onClick={() => add(p)} className="rounded-lg bg-primary px-3 py-2 text-sm font-bold text-primary-foreground hover:opacity-90">+ للسلة</button>
         </div>
       </div>
@@ -146,8 +146,9 @@ function Store() {
 
           <section>
             <h2 className="mb-5 text-2xl">جميع المنتجات {cat !== "الكل" && `— ${cat}`}</h2>
-            {filtered.length ? <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-5">{filtered.map((p) => <Card key={p.id} p={p} />)}</div>
-              : <p className="text-muted-foreground">لا توجد منتجات مطابقة.</p>}
+            {filtered.length ? <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-5">{filtered.slice(0, limit).map((p) => <Card key={p.id} p={p} />)}</div>
+              : <p className="text-muted-foreground">{products.length ? "لا توجد منتجات مطابقة." : "جارٍ تحميل المنتجات..."}</p>}
+            {filtered.length > limit && <button onClick={() => setLimit(limit + 20)} className="mx-auto mt-6 block rounded-full border bg-card px-6 py-2 font-bold">عرض المزيد ({filtered.length - limit})</button>}
           </section>
 
           <section><h2 className="mb-5 text-2xl">✨ وصل حديثًا</h2>
@@ -155,7 +156,7 @@ function Store() {
           </section>
 
           <section id="offers"><h2 className="mb-5 text-2xl">🔥 العروض</h2>
-            <div className="grid grid-cols-2 gap-4 md:grid-cols-5">{products.filter((p) => p.oldPrice).map((p) => <Card key={p.id} p={p} />)}</div>
+            <div className="grid grid-cols-2 gap-4 md:grid-cols-5">{products.filter((p) => p.oldPrice).slice(0, 10).map((p) => <Card key={p.id} p={p} />)}</div>
           </section>
         </main>
 
@@ -175,7 +176,7 @@ function Store() {
             <div className="flex justify-between"><h2 className="text-2xl">سلة التسوق</h2><button onClick={() => setCartOpen(false)}>✕</button></div>
             <div className="mt-4 flex-1 space-y-3 overflow-auto">
               {count === 0 && <p className="text-muted-foreground">السلة فارغة.</p>}
-              {Object.entries(cart).map(([id, n]) => { const p = products.find((x) => x.id === +id)!; return (
+              {Object.entries(cart).map(([id, n]) => { const p = products.find((x) => x.id === +id); if (!p) return null; return (
                 <div key={id} className="flex items-center gap-3 rounded-xl border p-2">
                   <img src={p.image} alt="" className="h-14 w-14 rounded-lg object-cover" />
                   <div className="flex-1"><p className="text-sm font-bold">{p.name}</p><p className="text-sm text-primary">{dzd(p.price * n)}</p></div>
@@ -184,7 +185,7 @@ function Store() {
             </div>
             <div className="border-t pt-4">
               <div className="mb-3 flex justify-between font-bold"><span>الإجمالي</span><span>{dzd(total)}</span></div>
-              <button disabled={!count} onClick={() => { setCart({}); setCartOpen(false); setToast("تم إتمام الطلب بنجاح 🎉"); setTimeout(() => setToast(""), 2500); }} className="w-full rounded-lg bg-accent py-3 font-bold text-accent-foreground disabled:opacity-50">إتمام الشراء</button>
+              <button disabled={!count} onClick={checkout} className="w-full rounded-lg bg-accent py-3 font-bold text-accent-foreground disabled:opacity-50">إتمام الشراء</button>
             </div>
           </aside>
         </div>
