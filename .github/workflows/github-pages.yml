@@ -28,8 +28,10 @@ jobs:
           VITE_SUPABASE_PROJECT_ID: gzljvdtbqoqngukotufx
       - name: Prepare static site
         run: |
-          OUT=dist/client
+          OUT=.output/public
+          [ -f "$OUT/index.html" ] || OUT=dist/client
           test -f "$OUT/index.html"
+          rm -f "$OUT/_headers"
           echo '<!doctype html><meta charset="utf-8"><script>location.replace("/")</script>' > "$OUT/404.html"
           echo "raidsaker.online" > "$OUT/CNAME"
           touch "$OUT/.nojekyll"
