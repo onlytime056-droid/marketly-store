@@ -1,11 +1,11 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
-import { products, categories, top5, useCart, isAdminIn, dzd, type Product } from "@/lib/shop";
+import { fromRow, useCart, isAdminIn, dzd, type Product, type ProductRow } from "@/lib/shop";
 import { supabase } from "@/integrations/supabase/client";
 import { HelpFab } from "@/components/HelpFab";
+import { AuthModal } from "@/components/AuthModal";
 
 type Profile = { full_name: string; phone: string; wilaya: string; address: string };
-import { AuthModal } from "@/components/AuthModal";
 
 export const Route = createFileRoute("/store")({
   head: () => ({
@@ -36,8 +36,17 @@ function Store() {
   const [detail, setDetail] = useState<Product | null>(null);
   const [toast, setToast] = useState("");
   const [ready, setReady] = useState(false);
+  const [products, setProducts] = useState<Product[]>([]);
+  const [limit, setLimit] = useState(20);
 
   useEffect(() => { if (!isAdminIn()) nav({ to: "/" }); else setReady(true); }, [nav]);
+  useEffect(() => {
+    supabase.from("products").select("id, name, category, price, image, stock, sold").order("id").limit(1000).then(({ data }) => {
+      const rows = (data ?? []) as ProductRow[];
+      const newest = new Set([...rows].sort((a, b) => b.id - a.id).slice(0, 8).map((r) => r.id));
+      setProducts(rows.map((r) => fromRow(r, newest)));
+    });
+  }, []);
   useEffect(() => {
     const load = async (u: { id: string; email?: string } | null) => {
       setUser(u ? { email: u.email ?? "" } : null); setAuthChecked(true);
@@ -47,11 +56,20 @@ function Store() {
     const { data: sub } = supabase.auth.onAuthStateChange((_e, s) => { setTimeout(() => load(s?.user ?? null), 0); });
     return () => sub.subscription.unsubscribe();
   }, []);
-  const filtered = useMemo(() => products.filter((p) => (cat === "الكل" || p.category === cat) && p.name.includes(q.trim())), [q, cat]);
+  const categories = useMemo(() => ["الكل", ...Array.from(new Set(products.map((p) => p.category)))], [products]);
+  const top5 = useMemo(() => [...products].sort((a, b) => b.sales - a.sales).slice(0, 5), [products]);
+  const filtered = useMemo(() => { const s = q.trim().toLowerCase(); return products.filter((p) => (cat === "الكل" || p.category === cat) && p.name.toLowerCase().includes(s)); }, [q, cat, products]);
+  useEffect(() => setLimit(20), [q, cat]);
   const count = Object.values(cart).reduce((a, b) => a + b, 0);
   const total = Object.entries(cart).reduce((s, [id, n]) => s + (products.find((p) => p.id === +id)?.price ?? 0) * n, 0);
   const add = (p: Product) => { setCart({ ...cart, [p.id]: (cart[p.id] ?? 0) + 1 }); setToast(`أضيف "${p.name}" إلى السلة`); setTimeout(() => setToast(""), 1800); };
   const change = (id: number, d: number) => { const n = { ...cart, [id]: (cart[id] ?? 0) + d }; if ((n[id] ?? 0) <= 0) delete n[id]; setCart(n); };
+  const checkout = async () => {
+    const items = Object.entries(cart).map(([id, n]) => { const p = products.find((x) => x.id === +id); return p ? { id: p.id, name: p.name, price: p.price, qty: n } : null; }).filter(Boolean);
+    const { error } = await supabase.from("orders").insert({ items, total });
+    if (error) { setToast("تعذّر إتمام الطلب، حاول مجددًا"); setTimeout(() => setToast(""), 2500); return; }
+    setCart({}); setCartOpen(false); setToast("تم إتمام الطلب بنجاح 🎉"); setTimeout(() => setToast(""), 2500);
+  };
   if (!ready || !authChecked) return null;
 
   const Card = ({ p }: { p: Product }) => (
