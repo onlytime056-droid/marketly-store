@@ -156,15 +156,6 @@ function Store() {
           </section>
 
           <section>
-            <h2 className="mb-4 text-2xl">التصنيفات</h2>
-            <div className="flex flex-wrap gap-2">
-              {categories.map((c) => (
-                <button key={c} onClick={() => setCat(c)} className={`rounded-full border px-5 py-2 text-sm font-bold ${cat === c ? "bg-primary text-primary-foreground" : "bg-card"}`}>{c}</button>
-              ))}
-            </div>
-          </section>
-
-          <section>
             <h2 className="mb-5 text-2xl">🏆 أفضل 5 منتجات مبيعًا</h2>
             <div className="grid gap-3 md:grid-cols-5">
               {top5.map((p, i) => (
@@ -183,14 +174,28 @@ function Store() {
             </div>
           </section>
 
-          <section>
+          <div id="catalog" className="grid scroll-mt-24 gap-6 lg:grid-cols-[240px_1fr]">
+            <aside className="h-fit rounded-2xl bg-card p-4 shadow-card lg:sticky lg:top-24">
+              <h2 className="mb-3 text-lg font-bold">التصنيفات</h2>
+              <div className="flex gap-2 overflow-x-auto pb-1 lg:flex-col lg:overflow-visible">
+                {categories.map((c) => (
+                  <button key={c} onClick={() => setCat(c)} className={`shrink-0 rounded-lg px-4 py-2 text-right text-sm font-bold transition ${cat === c ? "bg-primary text-primary-foreground" : "bg-secondary hover:bg-muted"}`}>{c}</button>
+                ))}
+              </div>
+              <div className="mt-4 hidden border-t pt-4 text-sm text-muted-foreground lg:block">
+                <p>النتائج: <span className="font-bold text-foreground">{totalCount.toLocaleString("ar")}</span></p>
+                <p className="mt-1">صفحة {page} من {totalPages}</p>
+              </div>
+            </aside>
+            <div className="min-w-0">
+<section>
   <div className="mb-5 flex items-center justify-between">
     <h2 className="text-2xl">جميع المنتجات {cat !== "الكل" && `— ${cat}`}</h2>
     <span className="text-sm text-muted-foreground">إجمالي المنتجات: {totalCount.toLocaleString("ar")}</span>
   </div>
 
   {pageProducts.length ? (
-    <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-5">
+    <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 xl:grid-cols-4">
       {pageProducts.map((p) => <Card key={p.id} p={p} />)}
     </div>
   ) : (
@@ -201,7 +206,7 @@ function Store() {
   {totalPages > 1 && (
     <div className="mt-8 flex items-center justify-center gap-2">
       <button
-        onClick={() => { setPage((p) => Math.max(1, p - 1)); window.scrollTo({ top: 400, behavior: "smooth" }); }}
+        onClick={() => { setPage((p) => Math.max(1, p - 1)); document.getElementById("catalog")?.scrollIntoView({ behavior: "smooth" }); }}
         disabled={page === 1}
         className="rounded-lg border px-4 py-2 font-medium disabled:opacity-40"
       >
@@ -213,7 +218,7 @@ function Store() {
       </span>
 
       <button
-        onClick={() => { setPage((p) => Math.min(totalPages, p + 1)); window.scrollTo({ top: 400, behavior: "smooth" }); }}
+        onClick={() => { setPage((p) => Math.min(totalPages, p + 1)); document.getElementById("catalog")?.scrollIntoView({ behavior: "smooth" }); }}
         disabled={page === totalPages}
         className="rounded-lg border px-4 py-2 font-medium disabled:opacity-40"
       >
@@ -223,6 +228,9 @@ function Store() {
   )}
 </section>
 
+
+            </div>
+          </div>
 
           <section><h2 className="mb-5 text-2xl">✨ وصل حديثًا</h2>
             <div className="grid grid-cols-2 gap-4 md:grid-cols-4">{newest.map((p) => <Card key={p.id} p={p} />)}</div>
