@@ -36,18 +36,58 @@ function Store() {
   const [detail, setDetail] = useState<Product | null>(null);
   const [toast, setToast] = useState("");
   const [ready, setReady] = useState(false);
-  const [products, setProducts] = useState<Product[]>([]);
-const [page, setPage] = useState(1);
-const pageSize = 20; // عدد المنتجات في كل صفحة
+  // Only the current page plus a few showcase rows are kept in memory; everything else is fetched on demand.
+  const [pageProducts, setPageProducts] = useState<Product[]>([]);
+  const [top5, setTop5] = useState<Product[]>([]);
+  const [newest, setNewest] = useState<Product[]>([]);
+  const [offers, setOffers] = useState<Product[]>([]);
+  const [totalCount, setTotalCount] = useState(0);
+  const [loading, setLoading] = useState(true);
+  const [known, setKnown] = useState<Record<number, Product>>({});
+  const [page, setPage] = useState(1);
+  const [debQ, setDebQ] = useState("");
+  const pageSize = 20;
+  const COLS = "id, name, category, price, image, stock, sold";
+  const categories = ["الكل", "إلكترونيات", "رياضة واستخدام يومي", "منزل ومطبخ", "أزياء وإكسسوارات", "جمال وعناية"];
+  const remember = (list: Product[]) => setKnown((k) => { const n = { ...k }; list.forEach((p) => (n[p.id] = p)); return n; });
 
   useEffect(() => { if (!isAdminIn()) nav({ to: "/" }); else setReady(true); }, [nav]);
+  useEffect(() => { const t = setTimeout(() => setDebQ(q.trim()), 350); return () => clearTimeout(t); }, [q]);
+  useEffect(() => setPage(1), [debQ, cat]);
   useEffect(() => {
-    supabase.from("products").select("id, name, category, price, image, stock, sold").order("id").limit(1000).then(({ data }) => {
-      const rows = (data ?? []) as ProductRow[];
-      const newest = new Set([...rows].sort((a, b) => b.id - a.id).slice(0, 8).map((r) => r.id));
-      setProducts(rows.map((r) => fromRow(r, newest)));
-    });
+    (async () => {
+      const [a, b, c] = await Promise.all([
+        supabase.from("products").select(COLS).order("sold", { ascending: false }).limit(5),
+        supabase.from("products").select(COLS).order("id", { ascending: false }).limit(8),
+        supabase.from("products").select(COLS).order("id").limit(70),
+      ]);
+      const ids = new Set(((b.data ?? []) as ProductRow[]).map((r) => r.id));
+      const t = ((a.data ?? []) as ProductRow[]).map((r) => fromRow(r, ids));
+      const n = ((b.data ?? []) as ProductRow[]).map((r) => fromRow(r, ids));
+      const o = ((c.data ?? []) as ProductRow[]).map((r) => fromRow(r, ids)).filter((p) => p.oldPrice).slice(0, 10);
+      setTop5(t); setNewest(n); setOffers(o); remember([...t, ...n, ...o]);
+    })();
   }, []);
+  useEffect(() => {
+    let cancelled = false;
+    setLoading(true);
+    const from = (page - 1) * pageSize;
+    let query = supabase.from("products").select(COLS, { count: "exact" });
+    if (cat !== "الكل") query = query.eq("category", cat);
+    if (debQ) query = query.ilike("name", `%${debQ}%`);
+    query.order("id").range(from, from + pageSize - 1).then(({ data, count }) => {
+      if (cancelled) return;
+      const list = ((data ?? []) as ProductRow[]).map((r) => fromRow(r, new Set()));
+      setPageProducts(list); setTotalCount(count ?? 0); setLoading(false); remember(list);
+    });
+    return () => { cancelled = true; };
+  }, [page, cat, debQ]);
+  // Load details of cart items not seen in this session (e.g. cart restored from storage).
+  useEffect(() => {
+    const missing = Object.keys(cart).map(Number).filter((id) => !known[id]);
+    if (!missing.length) return;
+    supabase.from("products").select(COLS).in("id", missing).then(({ data }) => remember(((data ?? []) as ProductRow[]).map((r) => fromRow(r, new Set()))));
+  }, [cart, known]);
   useEffect(() => {
     const load = async (u: { id: string; email?: string } | null) => {
       setUser(u ? { email: u.email ?? "" } : null); setAuthChecked(true);
@@ -57,16 +97,8 @@ const pageSize = 20; // عدد المنتجات في كل صفحة
     const { data: sub } = supabase.auth.onAuthStateChange((_e, s) => { setTimeout(() => load(s?.user ?? null), 0); });
     return () => sub.subscription.unsubscribe();
   }, []);
-  const categories = useMemo(() => ["الكل", ...Array.from(new Set(products.map((p) => p.category)))], [products]);
-  const top5 = useMemo(() => [...products].sort((a, b) => b.sales - a.sales).slice(0, 5), [products]);
-  const filtered = useMemo(() => { const s = q.trim().toLowerCase(); return products.filter((p) => (cat === "الكل" || p.category === cat) && p.name.toLowerCase().includes(s)); }, [q, cat, products]);
-  const totalPages = Math.ceil(filtered.length / pageSize) || 1;
-const pageProducts = useMemo(() => {
-  const start = (page - 1) * pageSize;
-  return filtered.slice(start, start + pageSize);
-}, [filtered, page]);
-
-useEffect(() => setPage(1), [q, cat]);
+  const totalPages = Math.ceil(totalCount / pageSize) || 1;
+  const products = useMemo(() => Object.values(known), [known]);
   const count = Object.values(cart).reduce((a, b) => a + b, 0);
   const total = Object.entries(cart).reduce((s, [id, n]) => s + (products.find((p) => p.id === +id)?.price ?? 0) * n, 0);
   const add = (p: Product) => { setCart({ ...cart, [p.id]: (cart[p.id] ?? 0) + 1 }); setToast(`أضيف "${p.name}" إلى السلة`); setTimeout(() => setToast(""), 1800); };
@@ -154,7 +186,7 @@ useEffect(() => setPage(1), [q, cat]);
           <section>
   <div className="mb-5 flex items-center justify-between">
     <h2 className="text-2xl">جميع المنتجات {cat !== "الكل" && `— ${cat}`}</h2>
-    <span className="text-sm text-muted-foreground">إجمالي المنتجات: {filtered.length}</span>
+    <span className="text-sm text-muted-foreground">إجمالي المنتجات: {totalCount.toLocaleString("ar")}</span>
   </div>
 
   {pageProducts.length ? (
@@ -162,7 +194,7 @@ useEffect(() => setPage(1), [q, cat]);
       {pageProducts.map((p) => <Card key={p.id} p={p} />)}
     </div>
   ) : (
-    <p className="text-muted-foreground">{products.length ? "لا توجد منتجات مطابقة." : "جارٍ تحميل المنتجات..."}</p>
+    <p className="text-muted-foreground">{loading ? "جارٍ تحميل المنتجات..." : "لا توجد منتجات مطابقة."}</p>
   )}
 
   {/* شريط أرقام الصفحات */}
@@ -193,11 +225,11 @@ useEffect(() => setPage(1), [q, cat]);
 
 
           <section><h2 className="mb-5 text-2xl">✨ وصل حديثًا</h2>
-            <div className="grid grid-cols-2 gap-4 md:grid-cols-4">{products.filter((p) => p.isNew).map((p) => <Card key={p.id} p={p} />)}</div>
+            <div className="grid grid-cols-2 gap-4 md:grid-cols-4">{newest.map((p) => <Card key={p.id} p={p} />)}</div>
           </section>
 
           <section id="offers"><h2 className="mb-5 text-2xl">🔥 العروض</h2>
-            <div className="grid grid-cols-2 gap-4 md:grid-cols-5">{products.filter((p) => p.oldPrice).slice(0, 10).map((p) => <Card key={p.id} p={p} />)}</div>
+            <div className="grid grid-cols-2 gap-4 md:grid-cols-5">{offers.map((p) => <Card key={p.id} p={p} />)}</div>
           </section>
         </main>
 
