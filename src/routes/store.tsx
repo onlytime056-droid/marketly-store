@@ -48,7 +48,7 @@ function Store() {
   const [debQ, setDebQ] = useState("");
   const pageSize = 20;
   const COLS = "id, name, category, price, image, stock, sold";
-  const categories = ["الكل", "إلكترونيات", "رياضة", "منزل ومطبخ", "أزياء", "جمال وعناية"];
+  const categories = ["الكل", "إلكترونيات", "رياضة واستخدام يومي", "منزل ومطبخ", "أزياء وإكسسوارات", "جمال وعناية"];
   const remember = (list: Product[]) => setKnown((k) => { const n = { ...k }; list.forEach((p) => (n[p.id] = p)); return n; });
 
   useEffect(() => { if (!isAdminIn()) nav({ to: "/" }); else setReady(true); }, [nav]);
