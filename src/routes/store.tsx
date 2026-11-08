@@ -141,7 +141,10 @@ function Store() {
         <header className="sticky top-0 z-30 border-b bg-card/95 backdrop-blur">
           <div className="mx-auto flex max-w-7xl flex-wrap items-center gap-3 px-4 py-3">
             <h1 className="text-3xl text-primary">سوق</h1>
-            <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="ابحث عن منتج..." className="order-3 w-full flex-1 rounded-full border bg-background px-4 py-2 outline-none focus:ring-2 focus:ring-ring sm:order-none sm:w-auto" />
+            <div className="relative order-3 w-full flex-1 sm:order-none sm:w-auto">
+              <span className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground">🔍</span>
+              <input value={q} onChange={(e) => { setQ(e.target.value); }} onKeyDown={(e) => e.key === "Enter" && document.getElementById("catalog")?.scrollIntoView({ behavior: "smooth" })} placeholder="ابحث بين آلاف المنتجات..." className="w-full rounded-full border bg-background py-2 pl-4 pr-11 outline-none focus:ring-2 focus:ring-ring" />
+            </div>
             <div className="mr-auto flex gap-2">
               <button onClick={() => setAcctOpen(true)} className="rounded-full bg-secondary px-4 py-2 text-sm font-bold">👤 حسابي</button>
               <button onClick={() => setCartOpen(true)} className="relative rounded-full bg-primary px-4 py-2 text-sm font-bold text-primary-foreground">🛒 السلة
@@ -178,6 +181,14 @@ function Store() {
             </div>
           </section>
 
+          <section id="offers" className="scroll-mt-24"><h2 className="mb-5 text-2xl">🔥 العروض والتخفيضات</h2>
+            <div className="grid grid-cols-2 gap-4 md:grid-cols-5">{offers.map((p) => <Card key={p.id} p={p} />)}</div>
+          </section>
+
+          <section><h2 className="mb-5 text-2xl">✨ وصل حديثًا</h2>
+            <div className="grid grid-cols-2 gap-4 md:grid-cols-4">{newest.map((p) => <Card key={p.id} p={p} />)}</div>
+          </section>
+
           <div id="catalog" className="grid scroll-mt-24 gap-6 lg:grid-cols-[240px_1fr]">
             <aside className="h-fit rounded-2xl bg-card p-4 shadow-card lg:sticky lg:top-24">
               <h2 className="mb-3 text-lg font-bold">التصنيفات</h2>
@@ -186,6 +197,13 @@ function Store() {
                   <button key={c} onClick={() => setCat(c)} className={`shrink-0 rounded-lg px-4 py-2 text-right text-sm font-bold transition ${cat === c ? "bg-primary text-primary-foreground" : "bg-secondary hover:bg-muted"}`}>{c}</button>
                 ))}
               </div>
+              <h2 className="mb-2 mt-5 text-lg font-bold">ترتيب حسب</h2>
+              <select value={sort} onChange={(e) => setSort(e.target.value)} className="w-full rounded-lg border bg-background px-3 py-2 text-sm">
+                <option value="id">الافتراضي</option>
+                <option value="sold">الأكثر مبيعًا</option>
+                <option value="price_asc">السعر: من الأقل</option>
+                <option value="price_desc">السعر: من الأعلى</option>
+              </select>
               <div className="mt-4 hidden border-t pt-4 text-sm text-muted-foreground lg:block">
                 <p>النتائج: <span className="font-bold text-foreground">{totalCount.toLocaleString("ar")}</span></p>
                 <p className="mt-1">صفحة {page} من {totalPages}</p>
@@ -228,6 +246,10 @@ function Store() {
       >
         التالي
       </button>
+      <form onSubmit={(e) => { e.preventDefault(); const n = Math.min(totalPages, Math.max(1, parseInt(jump) || 1)); setPage(n); setJump(""); document.getElementById("catalog")?.scrollIntoView({ behavior: "smooth" }); }} className="flex items-center gap-1">
+        <input value={jump} onChange={(e) => setJump(e.target.value.replace(/\D/g, ""))} placeholder="رقم" className="w-20 rounded-lg border bg-background px-2 py-2 text-center text-sm" />
+        <button className="rounded-lg bg-primary px-3 py-2 text-sm font-bold text-primary-foreground">انتقال</button>
+      </form>
     </div>
   )}
 </section>
@@ -235,14 +257,6 @@ function Store() {
 
             </div>
           </div>
-
-          <section><h2 className="mb-5 text-2xl">✨ وصل حديثًا</h2>
-            <div className="grid grid-cols-2 gap-4 md:grid-cols-4">{newest.map((p) => <Card key={p.id} p={p} />)}</div>
-          </section>
-
-          <section id="offers"><h2 className="mb-5 text-2xl">🔥 العروض</h2>
-            <div className="grid grid-cols-2 gap-4 md:grid-cols-5">{offers.map((p) => <Card key={p.id} p={p} />)}</div>
-          </section>
         </main>
 
         <footer className="mt-10 border-t bg-card py-8 text-center text-sm text-muted-foreground">
