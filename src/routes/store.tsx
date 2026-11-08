@@ -46,6 +46,8 @@ function Store() {
   const [known, setKnown] = useState<Record<number, Product>>({});
   const [page, setPage] = useState(1);
   const [debQ, setDebQ] = useState("");
+  const [sort, setSort] = useState("id");
+  const [jump, setJump] = useState("");
   const pageSize = 20;
   const COLS = "id, name, category, price, image, stock, sold";
   const categories = ["الكل", "إلكترونيات", "رياضة واستخدام يومي", "منزل ومطبخ", "أزياء وإكسسوارات", "جمال وعناية"];
@@ -53,12 +55,13 @@ function Store() {
 
   useEffect(() => { if (!isAdminIn()) nav({ to: "/" }); else setReady(true); }, [nav]);
   useEffect(() => { const t = setTimeout(() => setDebQ(q.trim()), 350); return () => clearTimeout(t); }, [q]);
-  useEffect(() => setPage(1), [debQ, cat]);
+  useEffect(() => setPage(1), [debQ, cat, sort]);
   useEffect(() => {
     (async () => {
       const [a, b, c] = await Promise.all([
-        supabase.from("products").select(COLS).order("sold", { ascending: false }).limit(5),
-        supabase.from("products").select(COLS).order("id", { ascending: false }).limit(8),
+        // Skip duplicated copies (names ending with "#n") so showcase rows show distinct products.
+        supabase.from("products").select(COLS).not("name", "like", "%#%").order("sold", { ascending: false }).limit(5),
+        supabase.from("products").select(COLS).not("name", "like", "%#%").order("id", { ascending: false }).limit(8),
         supabase.from("products").select(COLS).order("id").limit(70),
       ]);
       const ids = new Set(((b.data ?? []) as ProductRow[]).map((r) => r.id));
@@ -75,13 +78,14 @@ function Store() {
     let query = supabase.from("products").select(COLS, { count: "exact" });
     if (cat !== "الكل") query = query.eq("category", cat);
     if (debQ) query = query.ilike("name", `%${debQ}%`);
-    query.order("id").range(from, from + pageSize - 1).then(({ data, count }) => {
+    const [col, asc] = sort === "price_asc" ? ["price", true] : sort === "price_desc" ? ["price", false] : sort === "sold" ? ["sold", false] : ["id", true];
+    query.order(col as string, { ascending: asc as boolean }).order("id").range(from, from + pageSize - 1).then(({ data, count }) => {
       if (cancelled) return;
       const list = ((data ?? []) as ProductRow[]).map((r) => fromRow(r, new Set()));
       setPageProducts(list); setTotalCount(count ?? 0); setLoading(false); remember(list);
     });
     return () => { cancelled = true; };
-  }, [page, cat, debQ]);
+  }, [page, cat, debQ, sort]);
   // Load details of cart items not seen in this session (e.g. cart restored from storage).
   useEffect(() => {
     const missing = Object.keys(cart).map(Number).filter((id) => !known[id]);
