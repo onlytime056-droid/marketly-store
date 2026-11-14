@@ -62,7 +62,7 @@ function Store() {
       const [a, b, c] = await Promise.all([
         // Skip duplicated copies (names ending with "#n") so showcase rows show distinct products.
         supabase.from("products").select(COLS).not("name", "like", "%#%").order("sold", { ascending: false }).limit(5),
-        supabase.from("products").select(COLS).not("name", "like", "%#%").order("id", { ascending: false }).limit(8),
+        supabase.from("products").select(COLS).not("name", "like", "%#%").order("id", { ascending: false }).limit(5),
         supabase.from("products").select(COLS).order("id").limit(70),
       ]);
       const ids = new Set(((b.data ?? []) as ProductRow[]).map((r) => r.id));
@@ -197,7 +197,7 @@ function Store() {
           </section>
 
           <section><h2 className="section-title mb-6 text-2xl md:text-3xl">✨ وصل حديثًا</h2>
-            <div className="grid grid-cols-2 gap-4 md:grid-cols-4">{newest.map((p) => <Card key={p.id} p={p} />)}</div>
+            <div className="grid grid-cols-2 gap-4 md:grid-cols-5">{newest.map((p) => <Card key={p.id} p={p} />)}</div>
           </section>
 
           <div id="catalog" className="grid scroll-mt-24 gap-6 lg:grid-cols-[240px_1fr]">
