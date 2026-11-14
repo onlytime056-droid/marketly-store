@@ -125,6 +125,8 @@ export type Database = {
           purchases: number
         }[]
       }
+      tp_delete_product: { Args: { _name: string }; Returns: number }
+      tp_reduce_prices: { Args: { _pct?: number }; Returns: number }
     }
     Enums: {
       [_ in never]: never
