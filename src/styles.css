@@ -62,3 +62,8 @@
 
 @utility bg-hero { background: var(--gradient-hero); }
 @utility shadow-card { box-shadow: var(--shadow-card); }
+
+@utility section-title {
+  display: flex; align-items: center; gap: 0.75rem;
+  &::after { content: ""; flex: 1; height: 2px; border-radius: 9999px; background: linear-gradient(to left, var(--color-gold), transparent); opacity: 0.6; }
+}

@@ -117,20 +117,20 @@ function Store() {
   if (!ready || !authChecked) return null;
 
   const Card = ({ p }: { p: Product }) => (
-    <div className="group overflow-hidden rounded-2xl bg-card shadow-card">
+    <div className="group flex flex-col overflow-hidden rounded-2xl bg-card shadow-card transition hover:-translate-y-1">
       <button onClick={() => setDetail(p)} className="relative block aspect-square w-full overflow-hidden bg-muted">
         <img src={p.image} alt={p.name} loading="lazy" className="h-full w-full object-cover transition group-hover:scale-105" />
         {p.oldPrice && <span className="absolute right-2 top-2 rounded-full bg-accent px-2 py-0.5 text-xs font-bold text-accent-foreground">خصم {Math.round(100 - (p.price / p.oldPrice) * 100)}%</span>}
         {p.isNew && <span className="absolute left-2 top-2 rounded-full bg-primary px-2 py-0.5 text-xs font-bold text-primary-foreground">جديد</span>}
       </button>
-      <div className="p-4">
+      <div className="flex flex-1 flex-col p-4">
         <p className="text-xs text-muted-foreground">{p.category}</p>
-        <h3 className="mt-1 font-bold">{p.name}</h3>
+        <h3 className="mt-1 line-clamp-2 min-h-[3rem] font-bold leading-6">{p.name}</h3>
         <p className="mt-1 line-clamp-1 text-sm text-muted-foreground">{p.desc}</p>
         <div className="mt-2 text-sm"><Stars r={p.rating} /></div>
-        <div className="mt-3 flex items-center justify-between">
-          <div><span className="text-lg font-bold text-primary">{dzd(p.price)}</span>{p.oldPrice && <span className="mr-2 text-sm text-muted-foreground line-through">{dzd(p.oldPrice)}</span>}</div>
-          <button onClick={() => add(p)} className="rounded-lg bg-primary px-3 py-2 text-sm font-bold text-primary-foreground hover:opacity-90">+ للسلة</button>
+        <div className="mt-auto flex items-end justify-between gap-2 pt-3">
+          <div className="flex flex-col"><span className="text-lg font-bold text-primary">{dzd(p.price)}</span>{p.oldPrice && <span className="text-xs text-muted-foreground line-through">{dzd(p.oldPrice)}</span>}</div>
+          <button onClick={() => add(p)} className="shrink-0 whitespace-nowrap rounded-lg bg-primary px-3 py-2 text-sm font-bold text-primary-foreground hover:opacity-90">+ للسلة</button>
         </div>
       </div>
     </div>
@@ -157,37 +157,46 @@ function Store() {
         </header>
 
         <main className="mx-auto max-w-7xl space-y-14 px-4 py-8">
-          <section className="bg-hero overflow-hidden rounded-3xl p-8 text-primary-foreground md:p-14">
+          <section className="bg-hero relative grid items-center gap-8 overflow-hidden rounded-3xl p-8 text-primary-foreground md:grid-cols-[1fr_auto] md:p-14">
+            <div className="pointer-events-none absolute -left-20 -top-20 h-72 w-72 rounded-full bg-gold/20 blur-3xl" />
+            <div className="pointer-events-none absolute -bottom-24 left-1/3 h-64 w-64 rounded-full bg-accent/25 blur-3xl" />
+            <div className="relative">
             <p className="font-bold text-gold">عروض الموسم</p>
             <h2 className="mt-2 max-w-xl text-4xl leading-tight md:text-5xl">خصومات تصل إلى 30% على أفضل المنتجات</h2>
             <p className="mt-3 max-w-md opacity-80">شحن مجاني للطلبات فوق 5000 د.ج وإرجاع سهل خلال 14 يومًا.</p>
-            <a href="#offers" className="mt-6 inline-block rounded-full bg-accent px-6 py-3 font-bold text-accent-foreground">تسوّق العروض</a>
+            <a href="#offers" className="mt-6 inline-block rounded-full bg-accent px-6 py-3 font-bold text-accent-foreground transition hover:scale-105">تسوّق العروض</a>
+            </div>
+            <div className="relative hidden grid-cols-2 gap-4 md:grid" aria-hidden>
+              {["🛍️", "📱", "🎧", "⌚"].map((e, i) => (
+                <div key={e} className={`grid h-28 w-28 place-items-center rounded-3xl bg-primary-foreground/10 text-5xl shadow-card backdrop-blur ${i % 2 ? "translate-y-6" : ""}`}>{e}</div>
+              ))}
+            </div>
           </section>
 
           <section>
-            <h2 className="mb-5 text-2xl">🏆 أفضل 5 منتجات مبيعًا</h2>
+            <h2 className="section-title mb-6 text-2xl md:text-3xl">🏆 أفضل 5 منتجات مبيعًا</h2>
             <div className="grid gap-3 md:grid-cols-5">
               {top5.map((p, i) => (
-                <div key={p.id} className="relative rounded-2xl bg-card p-4 shadow-card">
+                <div key={p.id} className="relative flex flex-col rounded-2xl bg-card p-4 shadow-card transition hover:-translate-y-1">
                   <span className="absolute right-3 top-3 grid h-9 w-9 place-items-center rounded-full bg-gold font-bold text-foreground">#{i + 1}</span>
                   <img src={p.image} alt={p.name} className="mx-auto aspect-square w-full rounded-xl object-cover" />
-                  <h3 className="mt-3 font-bold">{p.name}</h3>
+                  <h3 className="mt-3 line-clamp-2 min-h-[3rem] font-bold leading-6">{p.name}</h3>
                   <p className="text-sm text-muted-foreground">{p.sales.toLocaleString("ar")} عملية بيع</p>
                   <div className="text-sm"><Stars r={p.rating} /></div>
-                  <div className="mt-2 flex items-center justify-between">
+                  <div className="mt-auto flex items-center justify-between pt-2">
                     <span className="font-bold text-primary">{dzd(p.price)}</span>
-                    <button onClick={() => add(p)} className="rounded-lg bg-accent px-2 py-1 text-xs font-bold text-accent-foreground">أضف</button>
+                    <button onClick={() => add(p)} className="whitespace-nowrap rounded-lg bg-primary px-3 py-2 text-sm font-bold text-primary-foreground hover:opacity-90">+ للسلة</button>
                   </div>
                 </div>
               ))}
             </div>
           </section>
 
-          <section id="offers" className="scroll-mt-24"><h2 className="mb-5 text-2xl">🔥 العروض والتخفيضات</h2>
+          <section id="offers" className="scroll-mt-24"><h2 className="section-title mb-6 text-2xl md:text-3xl">🔥 العروض والتخفيضات</h2>
             <div className="grid grid-cols-2 gap-4 md:grid-cols-5">{offers.map((p) => <Card key={p.id} p={p} />)}</div>
           </section>
 
-          <section><h2 className="mb-5 text-2xl">✨ وصل حديثًا</h2>
+          <section><h2 className="section-title mb-6 text-2xl md:text-3xl">✨ وصل حديثًا</h2>
             <div className="grid grid-cols-2 gap-4 md:grid-cols-4">{newest.map((p) => <Card key={p.id} p={p} />)}</div>
           </section>
 
