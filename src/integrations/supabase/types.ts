@@ -47,6 +47,7 @@ export type Database = {
           id: number
           image: string
           name: string
+          original_price: number | null
           price: number
           sold: number
           stock: number
@@ -56,6 +57,7 @@ export type Database = {
           id?: number
           image: string
           name: string
+          original_price?: number | null
           price: number
           sold?: number
           stock?: number
@@ -65,6 +67,7 @@ export type Database = {
           id?: number
           image?: string
           name?: string
+          original_price?: number | null
           price?: number
           sold?: number
           stock?: number
@@ -127,6 +130,7 @@ export type Database = {
       }
       tp_delete_product: { Args: { _name: string }; Returns: number }
       tp_reduce_prices: { Args: { _pct?: number }; Returns: number }
+      tp_reset_prices: { Args: never; Returns: number }
     }
     Enums: {
       [_ in never]: never

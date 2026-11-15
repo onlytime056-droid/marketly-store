@@ -32,6 +32,11 @@ export function AdminPanel({ onChanged }: { onChanged: () => void }) {
     if (error) throw error; setRows([]); setMsg(data ? `تم حذف ${data} منتج باسم "${name}"` : "لا يوجد منتج بهذا الاسم"); onChanged();
   }); };
 
+  const q5 = () => run("استعادة الأسعار الأصلية", async () => {
+    const { data, error } = await supabase.rpc("tp_reset_prices" as never);
+    if (error) throw error; setRows([]); setMsg(`تمت استعادة السعر الأصلي لـ ${data} منتج`); onChanged();
+  });
+
   const sql = [
     `SELECT * FROM products WHERE category = '${catS}';`,
     "SELECT name, price FROM products WHERE stock < 3;",
@@ -55,7 +60,8 @@ export function AdminPanel({ onChanged }: { onChanged: () => void }) {
                 <code className="mt-2 block rounded-lg bg-foreground p-2 font-mono text-xs text-gold" dir="ltr">{sql[1]}</code></div>
               <div className="rounded-xl border p-3"><p className="font-bold">3) تخفيض كل الأسعار 20%</p>
                 <button disabled={busy} onClick={q3} className="mt-2 rounded-lg bg-accent px-3 py-1.5 text-sm font-bold text-accent-foreground">تنفيذ</button>
-                <code className="mt-2 block rounded-lg bg-foreground p-2 font-mono text-xs text-gold" dir="ltr">{sql[2]}</code></div>
+                <code className="mt-2 block rounded-lg bg-foreground p-2 font-mono text-xs text-gold" dir="ltr">{sql[2]}</code>
+                <button disabled={busy} onClick={q5} className="mt-2 rounded-lg border px-3 py-1.5 text-sm font-bold">↺ استعادة الأسعار الأصلية</button></div>
               <div className="rounded-xl border p-3"><p className="font-bold">4) حذف منتج بالاسم</p>
                 <div className="mt-2 flex gap-2"><input value={name} onChange={(e) => setName(e.target.value)} placeholder="اسم المنتج" className="flex-1 rounded-lg border bg-background px-2" /><button disabled={busy} onClick={q4} className="rounded-lg bg-destructive px-3 py-1.5 text-sm font-bold text-destructive-foreground">حذف</button></div>
                 <code className="mt-2 block rounded-lg bg-foreground p-2 font-mono text-xs text-gold" dir="ltr">{sql[3]}</code></div>
