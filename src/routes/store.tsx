@@ -147,7 +147,6 @@ function Store() {
               <input value={q} onChange={(e) => { setQ(e.target.value); }} onKeyDown={(e) => e.key === "Enter" && document.getElementById("catalog")?.scrollIntoView({ behavior: "smooth" })} placeholder="ابحث بين آلاف المنتجات..." className="w-full rounded-full border bg-background py-2 pl-4 pr-11 outline-none focus:ring-2 focus:ring-ring" />
             </div>
             <div className="mr-auto flex gap-2">
-              <AdminPanel onChanged={() => window.location.reload()} />
               <button onClick={() => setAcctOpen(true)} className="rounded-full bg-secondary px-4 py-2 text-sm font-bold">👤 حسابي</button>
               <button onClick={() => setCartOpen(true)} className="relative rounded-full bg-primary px-4 py-2 text-sm font-bold text-primary-foreground">🛒 السلة
                 {count > 0 && <span className="absolute -left-1 -top-1 grid h-5 w-5 place-items-center rounded-full bg-accent text-xs text-accent-foreground">{count}</span>}
@@ -279,6 +278,7 @@ function Store() {
 
       {!user && <AuthModal />}
       <HelpFab />
+      <AdminPanel onChanged={() => window.location.reload()} />
 
       {cartOpen && (
         <div className="fixed inset-0 z-40 bg-overlay" onClick={() => setCartOpen(false)}>
